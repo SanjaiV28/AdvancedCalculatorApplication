@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Advanced Calculator</title>
+	<style>
+		body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+		.container { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+		.card { border: 1px solid #ddd; border-radius: 12px; padding: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+		h1 { margin-bottom: 0.25rem; }
+		input, select, button, textarea { font-size: 1rem; padding: 0.5rem 0.6rem; }
+		.grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; }
+		.row { display: flex; gap: 0.5rem; margin: 0.5rem 0; align-items: center; }
+		.output { font-size: 1.3rem; font-weight: 600; }
+		code { background: #f6f8fa; padding: 0 0.3rem; border-radius: 4px; }
+		.footer { margin-top: 1rem; color: #666; font-size: 0.9rem; }
+		.error { color: #b00020; }
+	</style>
+</head>
+<body>
+	<h1>Advanced Calculator</h1>
+	<div class="footer">REST API: <code>/api/binary</code>, <code>/api/unary</code>, <code>/api/expr</code> · Docs: <a href="/swagger-ui.html">OpenAPI UI</a></div>
+	<div class="container">
+		<div class="card">
+			<h2>Simple</h2>
+			<div class="row">
+				<input id="x" type="number" placeholder="x" step="any" />
+				<select id="op">
+					<option value="add">+</option>
+					<option value="subtract">-</option>
+					<option value="multiply">×</option>
+					<option value="divide">÷</option>
+					<option value="pow">x^y</option>
+					<option value="mod">mod</option>
+				</select>
+				<input id="y" type="number" placeholder="y" step="any" />
+				<button onclick="doBinary()">=</button>
+			</div>
+			<div id="out1" class="output"></div>
+			<div id="err1" class="error"></div>
+		</div>
+		<div class="card">
+			<h2>Scientific</h2>
+			<div class="row">
+				<select id="uop">
+					<option value="sqrt">sqrt</option>
+					<option value="abs">abs</option>
+					<option value="sin">sin</option>
+					<option value="cos">cos</option>
+					<option value="tan">tan</option>
+					<option value="asin">asin</option>
+					<option value="acos">acos</option>
+					<option value="atan">atan</option>
+					<option value="exp">exp</option>
+					<option value="ln">ln</option>
+					<option value="log10">log10</option>
+					<option value="deg2rad">deg→rad</option>
+					<option value="rad2deg">rad→deg</option>
+				</select>
+				<input id="ux" type="number" placeholder="x" step="any" />
+				<button onclick="doUnary()">=</button>
+			</div>
+			<div id="out2" class="output"></div>
+			<div id="err2" class="error"></div>
+		</div>
+	</div>
+
+	<div class="card" style="margin-top:1rem;">
+		<h2>Expression</h2>
+		<div class="row"><input id="expr" type="text" placeholder="e.g. sin(pi/4)+sqrt(2)" style="flex:1" /> <button onclick="doExpr()">Evaluate</button></div>
+		<div class="row"><textarea id="vars" placeholder='Variables JSON (optional), e.g. {"a":2,"b":3}' style="flex:1" rows="3"></textarea></div>
+		<div id="out3" class="output"></div>
+		<div id="err3" class="error"></div>
+	</div>
+
+	<script>
+	async function doBinary(){
+		const body = { op: document.getElementById('op').value, x: parseFloat(document.getElementById('x').value), y: parseFloat(document.getElementById('y').value) };
+		await call('/api/binary', body, 'out1', 'err1');
+	}
+	async function doUnary(){
+		const body = { op: document.getElementById('uop').value, x: parseFloat(document.getElementById('ux').value) };
+		await call('/api/unary', body, 'out2', 'err2');
+	}
+	async function doExpr(){
+		let vars = {};
+		try { const raw = document.getElementById('vars').value.trim(); if (raw) vars = JSON.parse(raw); } catch(e){ document.getElementById('err3').innerText = e.message; return; }
+		const body = { expression: document.getElementById('expr').value, variables: vars };
+		await call('/api/expr', body, 'out3', 'err3');
+	}
+	async function call(url, body, outId, errId){
+		document.getElementById(outId).innerText = '';
+		document.getElementById(errId).innerText = '';
+		try {
+			const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+			const data = await res.json();
+			if (!res.ok){ document.getElementById(errId).innerText = data.error || 'Error'; return; }
+			document.getElementById(outId).innerText = data.result;
+		} catch(e){ document.getElementById(errId).innerText = e.message; }
+	}
+	</script>
+</body>
+</html> 
