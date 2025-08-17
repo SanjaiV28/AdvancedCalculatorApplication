@@ -6,14 +6,9 @@ import com.example.calculator.web.dto.UnaryOpRequest;
 import com.example.calculator.web.dto.ExpressionRequest;
 import com.example.calculator.web.dto.CalcResponse;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 @Validated
 @RestController
